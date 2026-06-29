@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "myrandommod:item/battery"
+    "model": "myrandommod:item/charged_battery"
   }
 }

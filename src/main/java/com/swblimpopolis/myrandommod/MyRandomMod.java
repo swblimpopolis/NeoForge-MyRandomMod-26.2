@@ -57,8 +57,10 @@ public class MyRandomMod {
     // Create a Deferred Register to hold MenuTypes which will all be registered under the "myrandommod" namespace
     public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(Registries.MENU, MODID);
 
-    // Creates a new simple item with the id "myrandommod:battery"
-    public static final DeferredItem<Item> BATTERY = ITEMS.registerSimpleItem("battery");
+    // The charged battery: produced by the solar panel and usable as fuel in the electric furnace.
+    public static final DeferredItem<Item> CHARGED_BATTERY = ITEMS.registerSimpleItem("charged_battery");
+    // The empty battery: a crafting component for future recipes. Deliberately not a fuel.
+    public static final DeferredItem<Item> EMPTY_BATTERY = ITEMS.registerSimpleItem("empty_battery");
 
     // The electric furnace block. For now it behaves exactly like a vanilla furnace (same smelting,
     // fuel and automation), emitting light when lit just like the real thing.
@@ -89,13 +91,14 @@ public class MyRandomMod {
     public static final Supplier<MenuType<SolarPanelMenu>> SOLAR_PANEL_MENU = MENU_TYPES.register("solar_panel",
             () -> IMenuTypeExtension.create((windowId, inventory, data) -> new SolarPanelMenu(windowId, inventory)));
 
-    // Creates a creative tab with the id "myrandommod:random_mod_tab" using the battery as its icon
+    // Creates a creative tab with the id "myrandommod:random_mod_tab" using the charged battery as its icon
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> RANDOM_MOD_TAB = CREATIVE_MODE_TABS.register("random_mod_tab", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.myrandommod.random_mod")) // The language key for the title of this CreativeModeTab
             .withTabsBefore(CreativeModeTabs.COMBAT)
-            .icon(() -> BATTERY.get().getDefaultInstance())
+            .icon(() -> CHARGED_BATTERY.get().getDefaultInstance())
             .displayItems((parameters, output) -> {
-                output.accept(BATTERY.get()); // Add the battery to the Random Mod tab
+                output.accept(CHARGED_BATTERY.get()); // Add the charged battery to the Random Mod tab
+                output.accept(EMPTY_BATTERY.get()); // Add the empty battery to the Random Mod tab
                 output.accept(ELECTRIC_FURNACE_ITEM.get()); // Add the electric furnace to the Random Mod tab
                 output.accept(SOLAR_PANEL_ITEM.get()); // Add the solar panel to the Random Mod tab
             }).build());

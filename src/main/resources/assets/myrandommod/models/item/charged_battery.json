@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "myrandommod:item/battery"
+    "layer0": "myrandommod:item/charged_battery"
   }
 }

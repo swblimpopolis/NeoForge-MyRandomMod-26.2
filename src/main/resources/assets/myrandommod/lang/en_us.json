@@ -1,6 +1,7 @@
 {
   "itemGroup.myrandommod.random_mod": "Random Mod",
-  "item.myrandommod.battery": "Battery",
+  "item.myrandommod.charged_battery": "Charged Battery",
+  "item.myrandommod.empty_battery": "Empty Battery",
   "block.myrandommod.electric_furnace": "Electric Furnace",
   "container.myrandommod.electric_furnace": "Electric Furnace",
   "block.myrandommod.solar_panel": "Solar Panel",

@@ -127,7 +127,7 @@ public class SolarPanelBlockEntity extends BaseContainerBlockEntity implements W
 
         ItemStack output = be.items.get(OUTPUT_SLOT);
         boolean hasRoom = output.isEmpty()
-                || (output.is(MyRandomMod.BATTERY.get()) && output.getCount() < output.getMaxStackSize());
+                || (output.is(MyRandomMod.CHARGED_BATTERY.get()) && output.getCount() < output.getMaxStackSize());
         be.generating = hasRoom && be.litCount > 0;
 
         if (be.generating) {
@@ -161,7 +161,7 @@ public class SolarPanelBlockEntity extends BaseContainerBlockEntity implements W
     private void addBattery() {
         ItemStack output = this.items.get(OUTPUT_SLOT);
         if (output.isEmpty()) {
-            this.items.set(OUTPUT_SLOT, new ItemStack(MyRandomMod.BATTERY.get()));
+            this.items.set(OUTPUT_SLOT, new ItemStack(MyRandomMod.CHARGED_BATTERY.get()));
         } else {
             output.grow(1);
         }

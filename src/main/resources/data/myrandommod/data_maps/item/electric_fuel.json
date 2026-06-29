@@ -1,6 +1,6 @@
 {
   "values": {
-    "myrandommod:battery": {
+    "myrandommod:charged_battery": {
       "burn_time": 1600
     }
   }
