@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "lead=false,lit=false": {"model": "myrandommod:block/solar_panel"},
+    "lead=false,lit=true":  {"model": "myrandommod:block/solar_panel_on"},
+    "lead=true,lit=false":  {"model": "myrandommod:block/lead_solar_panel"},
+    "lead=true,lit=true":   {"model": "myrandommod:block/lead_solar_panel_on"}
+  }
+}

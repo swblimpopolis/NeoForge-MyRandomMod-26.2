@@ -1,0 +1,7 @@
+{
+  "parent": "myrandommod:block/solar_panel_base",
+  "textures": {
+    "top": "myrandommod:block/solar_panel_top_off",
+    "side": "myrandommod:block/solar_panel_side"
+  }
+}

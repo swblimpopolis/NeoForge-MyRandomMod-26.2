@@ -8,8 +8,11 @@ import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 
 import com.swblimpopolis.myrandommod.block.ElectricFurnaceBlock;
+import com.swblimpopolis.myrandommod.block.SolarPanelBlock;
 import com.swblimpopolis.myrandommod.block.entity.ElectricFurnaceBlockEntity;
+import com.swblimpopolis.myrandommod.block.entity.SolarPanelBlockEntity;
 import com.swblimpopolis.myrandommod.menu.ElectricFurnaceMenu;
+import com.swblimpopolis.myrandommod.menu.SolarPanelMenu;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -72,6 +75,20 @@ public class MyRandomMod {
     public static final Supplier<MenuType<ElectricFurnaceMenu>> ELECTRIC_FURNACE_MENU = MENU_TYPES.register("electric_furnace",
             () -> IMenuTypeExtension.create((windowId, inventory, data) -> new ElectricFurnaceMenu(windowId, inventory)));
 
+    // The solar panel block: a daylight-detector-shaped slab that generates batteries during the day.
+    // Touching panels form a cluster that generates faster and shares a single output (see the block entity).
+    public static final DeferredBlock<SolarPanelBlock> SOLAR_PANEL = BLOCKS.registerBlock("solar_panel",
+            SolarPanelBlock::new,
+            p -> p.mapColor(MapColor.METAL).strength(2.0f).requiresCorrectToolForDrops().noOcclusion());
+    // The item form of the solar panel block
+    public static final DeferredItem<BlockItem> SOLAR_PANEL_ITEM = ITEMS.registerSimpleBlockItem("solar_panel", SOLAR_PANEL);
+    // The block entity that runs the daylight generation and clustering for the solar panel
+    public static final Supplier<BlockEntityType<SolarPanelBlockEntity>> SOLAR_PANEL_BE = BLOCK_ENTITY_TYPES.register("solar_panel",
+            () -> new BlockEntityType<>(SolarPanelBlockEntity::new, Set.of(SOLAR_PANEL.get())));
+    // The menu (container GUI) for the solar panel
+    public static final Supplier<MenuType<SolarPanelMenu>> SOLAR_PANEL_MENU = MENU_TYPES.register("solar_panel",
+            () -> IMenuTypeExtension.create((windowId, inventory, data) -> new SolarPanelMenu(windowId, inventory)));
+
     // Creates a creative tab with the id "myrandommod:random_mod_tab" using the battery as its icon
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> RANDOM_MOD_TAB = CREATIVE_MODE_TABS.register("random_mod_tab", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.myrandommod.random_mod")) // The language key for the title of this CreativeModeTab
@@ -80,6 +97,7 @@ public class MyRandomMod {
             .displayItems((parameters, output) -> {
                 output.accept(BATTERY.get()); // Add the battery to the Random Mod tab
                 output.accept(ELECTRIC_FURNACE_ITEM.get()); // Add the electric furnace to the Random Mod tab
+                output.accept(SOLAR_PANEL_ITEM.get()); // Add the solar panel to the Random Mod tab
             }).build());
 
     // The constructor for the mod class is the first code that is run when your mod is loaded.

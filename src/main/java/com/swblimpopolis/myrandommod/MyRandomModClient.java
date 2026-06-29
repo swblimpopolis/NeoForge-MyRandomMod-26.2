@@ -1,6 +1,7 @@
 package com.swblimpopolis.myrandommod;
 
 import com.swblimpopolis.myrandommod.client.screen.ElectricFurnaceScreen;
+import com.swblimpopolis.myrandommod.client.screen.SolarPanelScreen;
 
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
@@ -37,5 +38,6 @@ public class MyRandomModClient {
     @SubscribeEvent
     static void onRegisterMenuScreens(RegisterMenuScreensEvent event) {
         event.register(MyRandomMod.ELECTRIC_FURNACE_MENU.get(), ElectricFurnaceScreen::new);
+        event.register(MyRandomMod.SOLAR_PANEL_MENU.get(), SolarPanelScreen::new);
     }
 }

@@ -1,0 +1,112 @@
+package com.swblimpopolis.myrandommod.menu;
+
+import com.swblimpopolis.myrandommod.MyRandomMod;
+
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.item.ItemStack;
+
+// Container GUI for the solar panel. One output slot (extract-only) plus the player inventory.
+// The synced ContainerData lets the screen show how big the cluster is and whether it's generating.
+public class SolarPanelMenu extends AbstractContainerMenu {
+    private static final int OUTPUT_SLOT = 0;
+    private static final int INV_START = 1;
+    private static final int INV_END = 37; // exclusive: 1 output + 36 player slots
+
+    private final Container container;
+    private final ContainerData data;
+
+    // Client-side constructor: empty stand-ins; the real contents arrive via sync.
+    public SolarPanelMenu(int containerId, Inventory inventory) {
+        this(containerId, inventory, new SimpleContainer(1), new SimpleContainerData(4));
+    }
+
+    // Server-side constructor: backed by the lead block entity's container and synced data.
+    public SolarPanelMenu(int containerId, Inventory inventory, Container container, ContainerData data) {
+        super(MyRandomMod.SOLAR_PANEL_MENU.get(), containerId);
+        checkContainerSize(container, 1);
+        this.container = container;
+        this.data = data;
+
+        // Output slot (centered near the top); players may take but not place.
+        this.addSlot(new Slot(container, OUTPUT_SLOT, 80, 35) {
+            @Override
+            public boolean mayPlace(ItemStack stack) {
+                return false;
+            }
+        });
+
+        // Player inventory (3 rows) and hotbar, standard 176-wide layout.
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 9; col++) {
+                this.addSlot(new Slot(inventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18));
+            }
+        }
+        for (int col = 0; col < 9; col++) {
+            this.addSlot(new Slot(inventory, col, 8 + col * 18, 142));
+        }
+
+        this.addDataSlots(data);
+    }
+
+    @Override
+    public ItemStack quickMoveStack(Player player, int index) {
+        ItemStack result = ItemStack.EMPTY;
+        Slot slot = this.slots.get(index);
+        if (slot != null && slot.hasItem()) {
+            ItemStack stack = slot.getItem();
+            result = stack.copy();
+            if (index == OUTPUT_SLOT) {
+                // Output -> player inventory (won't fit back into the output slot).
+                if (!this.moveItemStackTo(stack, INV_START, INV_END, true)) {
+                    return ItemStack.EMPTY;
+                }
+            } else {
+                // Player inventory <-> hotbar (the output slot rejects insertions).
+                int mainEnd = INV_START + 27;
+                if (index < mainEnd) {
+                    if (!this.moveItemStackTo(stack, mainEnd, INV_END, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                } else if (!this.moveItemStackTo(stack, INV_START, mainEnd, false)) {
+                    return ItemStack.EMPTY;
+                }
+            }
+
+            if (stack.isEmpty()) {
+                slot.setByPlayer(ItemStack.EMPTY);
+            } else {
+                slot.setChanged();
+            }
+            if (stack.getCount() == result.getCount()) {
+                return ItemStack.EMPTY;
+            }
+            slot.onTake(player, stack);
+        }
+        return result;
+    }
+
+    @Override
+    public boolean stillValid(Player player) {
+        return this.container.stillValid(player);
+    }
+
+    public int getClusterSize() {
+        return this.data.get(1);
+    }
+
+    public boolean isGenerating() {
+        return this.data.get(2) != 0;
+    }
+
+    // Panels currently in sunlight — the ones actually contributing to the generation speed.
+    public int getLitCount() {
+        return this.data.get(3);
+    }
+}
