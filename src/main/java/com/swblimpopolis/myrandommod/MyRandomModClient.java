@@ -1,5 +1,7 @@
 package com.swblimpopolis.myrandommod;
 
+import com.swblimpopolis.myrandommod.client.screen.ElectricFurnaceScreen;
+
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -7,6 +9,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 
@@ -27,5 +30,12 @@ public class MyRandomModClient {
         // Some client setup code
         MyRandomMod.LOGGER.info("HELLO FROM CLIENT SETUP");
         MyRandomMod.LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
+    }
+
+    // Binds the electric furnace menu to its screen. RegisterMenuScreensEvent is an IModBusEvent,
+    // so @EventBusSubscriber routes it to the mod bus automatically.
+    @SubscribeEvent
+    static void onRegisterMenuScreens(RegisterMenuScreensEvent event) {
+        event.register(MyRandomMod.ELECTRIC_FURNACE_MENU.get(), ElectricFurnaceScreen::new);
     }
 }
