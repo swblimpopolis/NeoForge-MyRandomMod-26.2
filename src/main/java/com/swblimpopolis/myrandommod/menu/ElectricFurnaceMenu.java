@@ -1,12 +1,14 @@
 package com.swblimpopolis.myrandommod.menu;
 
 import com.swblimpopolis.myrandommod.MyRandomMod;
+import com.swblimpopolis.myrandommod.block.entity.ElectricFurnaceBlockEntity;
 
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractFurnaceMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.RecipeBookType;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipePropertySet;
 
 // A furnace menu in every respect: same slots, same accepted inputs (FURNACE_INPUT) and the
@@ -20,5 +22,11 @@ public class ElectricFurnaceMenu extends AbstractFurnaceMenu {
     // Server-side constructor: backed by the block entity's container and synced data.
     public ElectricFurnaceMenu(int containerId, Inventory inventory, Container container, ContainerData data) {
         super(MyRandomMod.ELECTRIC_FURNACE_MENU.get(), RecipePropertySet.FURNACE_INPUT, RecipeBookType.FURNACE, containerId, inventory, container, data);
+    }
+
+    // Only electric fuel counts as fuel here — this gates the fuel slot and shift-click routing.
+    @Override
+    protected boolean isFuel(ItemStack stack) {
+        return ElectricFurnaceBlockEntity.isElectricFuel(stack);
     }
 }
