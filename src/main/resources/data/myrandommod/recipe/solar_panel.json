@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": "minecraft:glass",
+    "S": "myrandommod:empty_battery",
+    "F": "minecraft:iron_ingot",
+    "R": "minecraft:redstone"
+  },
+  "pattern": [
+    "GGG",
+    "SSS",
+    "FRF"
+  ],
+  "result": {
+    "id": "myrandommod:solar_panel",
+    "count": 1
+  }
+}
