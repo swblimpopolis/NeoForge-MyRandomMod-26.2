@@ -11,11 +11,16 @@ import com.swblimpopolis.myrandommod.block.ElectricFurnaceBlock;
 import com.swblimpopolis.myrandommod.block.SolarPanelBlock;
 import com.swblimpopolis.myrandommod.block.entity.ElectricFurnaceBlockEntity;
 import com.swblimpopolis.myrandommod.block.entity.SolarPanelBlockEntity;
+import com.swblimpopolis.myrandommod.item.ElectricSwordItem;
 import com.swblimpopolis.myrandommod.menu.ElectricFurnaceMenu;
 import com.swblimpopolis.myrandommod.menu.SolarPanelMenu;
 
+import com.mojang.serialization.Codec;
+
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
@@ -56,11 +61,26 @@ public class MyRandomMod {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MODID);
     // Create a Deferred Register to hold MenuTypes which will all be registered under the "myrandommod" namespace
     public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(Registries.MENU, MODID);
+    // Create a Deferred Register to hold custom data component types under the "myrandommod" namespace
+    public static final DeferredRegister<DataComponentType<?>> DATA_COMPONENTS = DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, MODID);
+
+    // The "charge" stored on a battery-powered item (e.g. the electric sword). Persisted to disk and
+    // synced to the client so the charge bar and charged/empty model render correctly.
+    public static final Supplier<DataComponentType<Integer>> CHARGE = DATA_COMPONENTS.register("charge",
+            () -> DataComponentType.<Integer>builder()
+                    .persistent(Codec.INT)
+                    .networkSynchronized(ByteBufCodecs.INT)
+                    .build());
 
     // The charged battery: produced by the solar panel and usable as fuel in the electric furnace.
     public static final DeferredItem<Item> CHARGED_BATTERY = ITEMS.registerSimpleItem("charged_battery");
     // The empty battery: a crafting component for future recipes. Deliberately not a fuel.
     public static final DeferredItem<Item> EMPTY_BATTERY = ITEMS.registerSimpleItem("empty_battery");
+
+    // The electric sword: a melee weapon that runs on battery charge (its own CHARGE component) rather
+    // than wearing out. Right-click with a charged battery to refill; unusable at zero charge. See ElectricSwordItem.
+    public static final DeferredItem<ElectricSwordItem> ELECTRIC_SWORD = ITEMS.registerItem("electric_sword",
+            ElectricSwordItem::new, ElectricSwordItem::baseProperties);
 
     // The electric furnace block. For now it behaves exactly like a vanilla furnace (same smelting,
     // fuel and automation), emitting light when lit just like the real thing.
@@ -99,6 +119,7 @@ public class MyRandomMod {
             .displayItems((parameters, output) -> {
                 output.accept(CHARGED_BATTERY.get()); // Add the charged battery to the Random Mod tab
                 output.accept(EMPTY_BATTERY.get()); // Add the empty battery to the Random Mod tab
+                output.accept(ELECTRIC_SWORD.get()); // Add the electric sword to the Random Mod tab
                 output.accept(ELECTRIC_FURNACE_ITEM.get()); // Add the electric furnace to the Random Mod tab
                 output.accept(SOLAR_PANEL_ITEM.get()); // Add the solar panel to the Random Mod tab
             }).build());
@@ -119,6 +140,8 @@ public class MyRandomMod {
         BLOCK_ENTITY_TYPES.register(modEventBus);
         // Register the Deferred Register to the mod event bus so menu types get registered
         MENU_TYPES.register(modEventBus);
+        // Register the Deferred Register to the mod event bus so data component types get registered
+        DATA_COMPONENTS.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (MyRandomMod) to respond directly to events.

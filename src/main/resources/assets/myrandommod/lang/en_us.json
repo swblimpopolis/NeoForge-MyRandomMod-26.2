@@ -2,6 +2,8 @@
   "itemGroup.myrandommod.random_mod": "Random Mod",
   "item.myrandommod.charged_battery": "Charged Battery",
   "item.myrandommod.empty_battery": "Empty Battery",
+  "item.myrandommod.electric_sword": "Electric Sword",
+  "gui.myrandommod.electric_sword.charge": "Charge: %s / %s",
   "block.myrandommod.electric_furnace": "Electric Furnace",
   "container.myrandommod.electric_furnace": "Electric Furnace",
   "block.myrandommod.solar_panel": "Solar Panel",

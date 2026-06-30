@@ -12,30 +12,39 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 
-// Container GUI for the solar panel. One output slot (extract-only) plus the player inventory.
-// The synced ContainerData lets the screen show how big the cluster is and whether it's generating.
+// Container GUI for the solar panel: an input slot (empty batteries) and an extract-only output slot
+// (charged batteries), plus the player inventory. The synced ContainerData lets the screen show the
+// cluster size and whether it's charging.
 public class SolarPanelMenu extends AbstractContainerMenu {
-    private static final int OUTPUT_SLOT = 0;
-    private static final int INV_START = 1;
-    private static final int INV_END = 37; // exclusive: 1 output + 36 player slots
+    private static final int INPUT_SLOT = 0;
+    private static final int OUTPUT_SLOT = 1;
+    private static final int INV_START = 2;
+    private static final int INV_END = 38; // exclusive: 2 machine slots + 36 player slots
 
     private final Container container;
     private final ContainerData data;
 
     // Client-side constructor: empty stand-ins; the real contents arrive via sync.
     public SolarPanelMenu(int containerId, Inventory inventory) {
-        this(containerId, inventory, new SimpleContainer(1), new SimpleContainerData(4));
+        this(containerId, inventory, new SimpleContainer(2), new SimpleContainerData(4));
     }
 
     // Server-side constructor: backed by the lead block entity's container and synced data.
     public SolarPanelMenu(int containerId, Inventory inventory, Container container, ContainerData data) {
         super(MyRandomMod.SOLAR_PANEL_MENU.get(), containerId);
-        checkContainerSize(container, 1);
+        checkContainerSize(container, 2);
         this.container = container;
         this.data = data;
 
-        // Output slot (centered near the top); players may take but not place.
-        this.addSlot(new Slot(container, OUTPUT_SLOT, 80, 35) {
+        // Input slot (left): only empty batteries may be placed here.
+        this.addSlot(new Slot(container, INPUT_SLOT, 56, 35) {
+            @Override
+            public boolean mayPlace(ItemStack stack) {
+                return stack.is(MyRandomMod.EMPTY_BATTERY.get());
+            }
+        });
+        // Output slot (right): charged batteries; players may take but not place.
+        this.addSlot(new Slot(container, OUTPUT_SLOT, 116, 35) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return false;
@@ -62,13 +71,18 @@ public class SolarPanelMenu extends AbstractContainerMenu {
         if (slot != null && slot.hasItem()) {
             ItemStack stack = slot.getItem();
             result = stack.copy();
-            if (index == OUTPUT_SLOT) {
-                // Output -> player inventory (won't fit back into the output slot).
+            if (index == INPUT_SLOT || index == OUTPUT_SLOT) {
+                // Machine slot -> player inventory.
                 if (!this.moveItemStackTo(stack, INV_START, INV_END, true)) {
                     return ItemStack.EMPTY;
                 }
+            } else if (stack.is(MyRandomMod.EMPTY_BATTERY.get())) {
+                // Empty batteries from inventory -> the input slot.
+                if (!this.moveItemStackTo(stack, INPUT_SLOT, INPUT_SLOT + 1, false)) {
+                    return ItemStack.EMPTY;
+                }
             } else {
-                // Player inventory <-> hotbar (the output slot rejects insertions).
+                // Anything else: shuffle between main inventory and hotbar.
                 int mainEnd = INV_START + 27;
                 if (index < mainEnd) {
                     if (!this.moveItemStackTo(stack, mainEnd, INV_END, false)) {
@@ -105,7 +119,7 @@ public class SolarPanelMenu extends AbstractContainerMenu {
         return this.data.get(2) != 0;
     }
 
-    // Panels currently in sunlight — the ones actually contributing to the generation speed.
+    // Panels currently in sunlight — the ones actually contributing to the charging speed.
     public int getLitCount() {
         return this.data.get(3);
     }

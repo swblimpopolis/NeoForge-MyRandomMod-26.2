@@ -45,7 +45,12 @@ public class ElectricFurnaceBlock extends AbstractFurnaceBlock {
 
     @Override
     public <T extends BlockEntity> @Nullable BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        return createFurnaceTicker(level, type, MyRandomMod.ELECTRIC_FURNACE_BE.get());
+        // Use our own server ticker (which wraps the vanilla furnace tick) so we can recover an empty
+        // battery for each charged battery burned. Nothing to do on the client.
+        if (level.isClientSide()) {
+            return null;
+        }
+        return createTickerHelper(type, MyRandomMod.ELECTRIC_FURNACE_BE.get(), ElectricFurnaceBlockEntity::electricServerTick);
     }
 
     @Override

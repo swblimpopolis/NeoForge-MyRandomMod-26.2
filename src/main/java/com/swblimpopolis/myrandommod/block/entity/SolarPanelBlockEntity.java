@@ -31,9 +31,11 @@ import org.jspecify.annotations.Nullable;
 // Holds the shared battery output and runs the daylight generation. Only the cluster's lead panel
 // (lowest block position) generates and stores items; the rest just feed their share to the lead.
 public class SolarPanelBlockEntity extends BaseContainerBlockEntity implements WorldlyContainer {
-    public static final int OUTPUT_SLOT = 0;
-    // "Charge" needed for one battery at a single panel. Cluster size is added each tick, so N panels
-    // make a battery N times faster (one battery every MAX_PROGRESS / N ticks of daylight).
+    // Slot 0 takes empty batteries (input); slot 1 holds the charged batteries the cluster produces.
+    public static final int INPUT_SLOT = 0;
+    public static final int OUTPUT_SLOT = 1;
+    // "Charge" needed to convert one empty battery into a charged one at a single panel. Cluster size
+    // is added each tick, so N lit panels charge a battery N times faster (one per MAX_PROGRESS / N ticks).
     public static final int MAX_PROGRESS = 1200;
     // Effective sky brightness (0-15) required to generate. Night and heavy weather fall below this.
     private static final int GEN_LIGHT_THRESHOLD = 12;
@@ -41,9 +43,9 @@ public class SolarPanelBlockEntity extends BaseContainerBlockEntity implements W
     private static final int MAX_CLUSTER = 256;
     private static final int CLUSTER_RECHECK_TICKS = 20;
     private static final Component DEFAULT_NAME = Component.translatable("container.myrandommod.solar_panel");
-    private static final int[] OUTPUT_SLOTS = {OUTPUT_SLOT};
+    private static final int[] ACCESSIBLE_SLOTS = {INPUT_SLOT, OUTPUT_SLOT};
 
-    private NonNullList<ItemStack> items = NonNullList.withSize(1, ItemStack.EMPTY);
+    private NonNullList<ItemStack> items = NonNullList.withSize(2, ItemStack.EMPTY);
     private int progress;
     private int clusterSize = 1;
     // How many cluster panels currently have enough sky access to generate. This (not clusterSize)
@@ -111,9 +113,9 @@ public class SolarPanelBlockEntity extends BaseContainerBlockEntity implements W
         }
 
         if (!pos.equals(be.leadPos)) {
-            // Not the lead: push anything we still hold toward the lead so extraction stays in one place.
+            // Not the lead: push anything we still hold toward the lead so input/output stay in one place.
             be.generating = false;
-            if (!be.items.get(OUTPUT_SLOT).isEmpty()) {
+            if (!be.items.get(INPUT_SLOT).isEmpty() || !be.items.get(OUTPUT_SLOT).isEmpty()) {
                 be.pushToLead(level);
             }
             return;
@@ -125,17 +127,24 @@ public class SolarPanelBlockEntity extends BaseContainerBlockEntity implements W
             be.litCount = countLit(level, cluster.members());
         }
 
+        // Charge only when sunlit AND there's an empty battery to charge AND room for a charged one.
+        ItemStack input = be.items.get(INPUT_SLOT);
         ItemStack output = be.items.get(OUTPUT_SLOT);
+        boolean hasInput = input.is(MyRandomMod.EMPTY_BATTERY.get());
         boolean hasRoom = output.isEmpty()
                 || (output.is(MyRandomMod.CHARGED_BATTERY.get()) && output.getCount() < output.getMaxStackSize());
-        be.generating = hasRoom && be.litCount > 0;
+        be.generating = be.litCount > 0 && hasInput && hasRoom;
 
         if (be.generating) {
             be.progress += be.litCount;
             if (be.progress >= MAX_PROGRESS) {
                 be.progress -= MAX_PROGRESS;
-                be.addBattery();
+                be.chargeOneBattery();
             }
+            be.setChanged();
+        } else if (be.progress != 0) {
+            // Reset progress whenever charging can't proceed (no empty battery, no room, or no sun).
+            be.progress = 0;
             be.setChanged();
         }
     }
@@ -158,7 +167,9 @@ public class SolarPanelBlockEntity extends BaseContainerBlockEntity implements W
         return level.canSeeSky(pos) && level.getEffectiveSkyBrightness(pos) >= GEN_LIGHT_THRESHOLD;
     }
 
-    private void addBattery() {
+    // Turn one empty battery from the input into a charged battery in the output.
+    private void chargeOneBattery() {
+        this.items.get(INPUT_SLOT).shrink(1);
         ItemStack output = this.items.get(OUTPUT_SLOT);
         if (output.isEmpty()) {
             this.items.set(OUTPUT_SLOT, new ItemStack(MyRandomMod.CHARGED_BATTERY.get()));
@@ -167,7 +178,7 @@ public class SolarPanelBlockEntity extends BaseContainerBlockEntity implements W
         }
     }
 
-    // Move our buffered batteries into the lead's output slot (merging stacks).
+    // Move any items we still hold (both slots) into the lead so input/output stay in one place.
     private void pushToLead(Level level) {
         if (this.leadPos == null || this.leadPos.equals(this.worldPosition)) {
             return;
@@ -175,11 +186,22 @@ public class SolarPanelBlockEntity extends BaseContainerBlockEntity implements W
         if (!(level.getBlockEntity(this.leadPos) instanceof SolarPanelBlockEntity lead)) {
             return;
         }
-        ItemStack mine = this.items.get(OUTPUT_SLOT);
-        ItemStack leadStack = lead.items.get(OUTPUT_SLOT);
+        moveStackToLead(lead, INPUT_SLOT);
+        moveStackToLead(lead, OUTPUT_SLOT);
+        lead.setChanged();
+        this.setChanged();
+    }
+
+    // Merge this panel's stack in the given slot into the lead's matching slot.
+    private void moveStackToLead(SolarPanelBlockEntity lead, int slot) {
+        ItemStack mine = this.items.get(slot);
+        if (mine.isEmpty()) {
+            return;
+        }
+        ItemStack leadStack = lead.items.get(slot);
         if (leadStack.isEmpty()) {
-            lead.items.set(OUTPUT_SLOT, mine.copy());
-            this.items.set(OUTPUT_SLOT, ItemStack.EMPTY);
+            lead.items.set(slot, mine.copy());
+            this.items.set(slot, ItemStack.EMPTY);
         } else if (ItemStack.isSameItemSameComponents(leadStack, mine)) {
             int canAccept = leadStack.getMaxStackSize() - leadStack.getCount();
             int moved = Math.min(canAccept, mine.getCount());
@@ -188,8 +210,6 @@ public class SolarPanelBlockEntity extends BaseContainerBlockEntity implements W
                 mine.shrink(moved);
             }
         }
-        lead.setChanged();
-        this.setChanged();
     }
 
     // Resolve the panel that actually holds this cluster's shared batteries. Falls back to this panel
@@ -260,7 +280,7 @@ public class SolarPanelBlockEntity extends BaseContainerBlockEntity implements W
 
     @Override
     public int getContainerSize() {
-        return 1;
+        return 2;
     }
 
     // getItems() stays the panel's OWN storage — this is what gets serialized and dropped on break,
@@ -282,12 +302,24 @@ public class SolarPanelBlockEntity extends BaseContainerBlockEntity implements W
 
     @Override
     public boolean isEmpty() {
-        return resolveLead().items.get(OUTPUT_SLOT).isEmpty();
+        NonNullList<ItemStack> leadItems = resolveLead().items;
+        return leadItems.get(INPUT_SLOT).isEmpty() && leadItems.get(OUTPUT_SLOT).isEmpty();
     }
 
     @Override
     public ItemStack getItem(int slot) {
         return resolveLead().items.get(slot);
+    }
+
+    // Forward insertion (e.g. a hopper pushing empty batteries into the input) to the lead's stash.
+    @Override
+    public void setItem(int slot, ItemStack stack) {
+        SolarPanelBlockEntity lead = resolveLead();
+        lead.items.set(slot, stack);
+        if (stack.getCount() > lead.getMaxStackSize(stack)) {
+            stack.setCount(lead.getMaxStackSize(stack));
+        }
+        lead.setChanged();
     }
 
     @Override
@@ -329,25 +361,27 @@ public class SolarPanelBlockEntity extends BaseContainerBlockEntity implements W
         return new SolarPanelMenu(containerId, inventory, this, this.dataAccess);
     }
 
-    // Output only: nothing can be inserted into a solar panel, but the battery can be pulled out.
+    // Only empty batteries may go into the input slot; the output (charged batteries) is extract-only.
     @Override
     public boolean canPlaceItem(int slot, ItemStack stack) {
-        return false;
+        return slot == INPUT_SLOT && stack.is(MyRandomMod.EMPTY_BATTERY.get());
     }
 
     @Override
     public int[] getSlotsForFace(Direction direction) {
-        return OUTPUT_SLOTS;
+        return ACCESSIBLE_SLOTS;
     }
 
+    // Hoppers may push empty batteries into the input, but may only pull charged batteries from the
+    // output (never yank the un-charged empties back out of the input).
     @Override
     public boolean canPlaceItemThroughFace(int slot, ItemStack stack, @Nullable Direction direction) {
-        return false;
+        return slot == INPUT_SLOT && stack.is(MyRandomMod.EMPTY_BATTERY.get());
     }
 
     @Override
     public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction direction) {
-        return true;
+        return slot == OUTPUT_SLOT;
     }
 
     // ----- persistence -----
