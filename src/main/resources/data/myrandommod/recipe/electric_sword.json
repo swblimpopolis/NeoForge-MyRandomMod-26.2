@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "A": "minecraft:iron_ingot",
+    "B": "myrandommod:empty_battery",
+    "C": "minecraft:redstone",
+    "D": "minecraft:stick"
+  },
+  "pattern": [
+    "AAB",
+    "CBC",
+    "DAA"
+  ],
+  "result": {
+    "id": "myrandommod:electric_sword",
+    "count": 1
+  }
+}

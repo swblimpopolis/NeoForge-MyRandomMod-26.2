@@ -1,6 +1,7 @@
 package com.swblimpopolis.myrandommod.menu;
 
 import com.swblimpopolis.myrandommod.MyRandomMod;
+import com.swblimpopolis.myrandommod.block.entity.SolarPanelBlockEntity;
 
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
@@ -37,14 +38,14 @@ public class SolarPanelMenu extends AbstractContainerMenu {
         this.data = data;
 
         // Input slot (left): only empty batteries may be placed here.
-        this.addSlot(new Slot(container, INPUT_SLOT, 56, 35) {
+        this.addSlot(new Slot(container, INPUT_SLOT, 51, 35) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return stack.is(MyRandomMod.EMPTY_BATTERY.get());
             }
         });
         // Output slot (right): charged batteries; players may take but not place.
-        this.addSlot(new Slot(container, OUTPUT_SLOT, 116, 35) {
+        this.addSlot(new Slot(container, OUTPUT_SLOT, 115, 35) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return false;
@@ -115,12 +116,19 @@ public class SolarPanelMenu extends AbstractContainerMenu {
         return this.data.get(1);
     }
 
-    public boolean isGenerating() {
-        return this.data.get(2) != 0;
-    }
-
     // Panels currently in sunlight — the ones actually contributing to the charging speed.
     public int getLitCount() {
         return this.data.get(3);
+    }
+
+    // Charge progress scaled to `pixels` wide (for the arrow overlay). Because progress climbs by the
+    // lit-panel count each tick, a bigger/sunnier cluster visibly fills the arrow faster.
+    public int getChargeProgress(int pixels) {
+        int progress = this.data.get(0);
+        int max = SolarPanelBlockEntity.MAX_PROGRESS;
+        if (max <= 0 || progress <= 0) {
+            return 0;
+        }
+        return Math.min(pixels, progress * pixels / max);
     }
 }

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": "minecraft:iron_nugget",
+    "S": "minecraft:gold_nugget",
+    "R": "minecraft:redstone"
+  },
+  "pattern": [
+    "GSG",
+    "SRS",
+    "GSG"
+  ],
+  "result": {
+    "id": "myrandommod:empty_battery",
+    "count": 1
+  }
+}

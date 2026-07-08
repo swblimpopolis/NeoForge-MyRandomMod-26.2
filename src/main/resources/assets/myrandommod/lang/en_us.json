@@ -9,8 +9,6 @@
   "block.myrandommod.solar_panel": "Solar Panel",
   "container.myrandommod.solar_panel": "Solar Panel",
   "gui.myrandommod.solar_panel.panels": "Panels: %s/%s",
-  "gui.myrandommod.solar_panel.generating": "Generating",
-  "gui.myrandommod.solar_panel.idle": "No sunlight",
 
   "myrandommod.configuration.title": "My Random Mod Configs",
   "myrandommod.configuration.section.myrandommod.common.toml": "My Random Mod Configs",

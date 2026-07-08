@@ -10,11 +10,21 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 
-// Simple container screen: the background plus two status lines (cluster size and sun state).
-// The progress is synced but shown as text here to keep the GUI art minimal/placeholder-friendly.
+// Container screen for the solar panel: the background, a charge-progress arrow that fills toward the
+// output (faster with a bigger/sunnier cluster), and two status lines placed in the clear band between
+// the machine slots and the player inventory so they never overlap the slots or the arrow.
 public class SolarPanelScreen extends AbstractContainerScreen<SolarPanelMenu> {
     private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(MyRandomMod.MODID, "textures/gui/solar_panel.png");
+    private static final Identifier CHARGE_PROGRESS = Identifier.fromNamespaceAndPath(MyRandomMod.MODID, "textures/gui/charge_progress.png");
     private static final int LABEL_COLOR = 0xFF404040;
+    // Progress arrow: same position/size as the vanilla furnace's burn arrow (24x16 at 79,34).
+    private static final int ARROW_X = 79;
+    private static final int ARROW_Y = 34;
+    private static final int ARROW_W = 24;
+    private static final int ARROW_H = 16;
+    // "Panels: lit/total" sits up top, just under the "Solar Panel" title (the slot boxes are tall
+    // enough that a line below them would clip into the input box).
+    private static final int PANELS_LABEL_Y = 18;
 
     public SolarPanelScreen(SolarPanelMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title, 176, 166);
@@ -26,6 +36,13 @@ public class SolarPanelScreen extends AbstractContainerScreen<SolarPanelMenu> {
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
         graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0.0F, 0.0F, this.imageWidth, this.imageHeight, 256, 256);
+
+        // Charge arrow fills left-to-right with the current progress.
+        int filled = this.menu.getChargeProgress(ARROW_W);
+        if (filled > 0) {
+            graphics.blit(RenderPipelines.GUI_TEXTURED, CHARGE_PROGRESS, x + ARROW_X, y + ARROW_Y,
+                    0.0F, 0.0F, filled, ARROW_H, ARROW_W, ARROW_H);
+        }
     }
 
     @Override
@@ -33,10 +50,6 @@ public class SolarPanelScreen extends AbstractContainerScreen<SolarPanelMenu> {
         super.extractLabels(graphics, mouseX, mouseY);
         Component panels = Component.translatable("gui.myrandommod.solar_panel.panels",
                 this.menu.getLitCount(), this.menu.getClusterSize());
-        Component status = this.menu.isGenerating()
-                ? Component.translatable("gui.myrandommod.solar_panel.generating")
-                : Component.translatable("gui.myrandommod.solar_panel.idle");
-        graphics.text(this.font, panels, this.titleLabelX, 18, LABEL_COLOR, false);
-        graphics.text(this.font, status, this.titleLabelX, 28, LABEL_COLOR, false);
+        graphics.text(this.font, panels, this.titleLabelX, PANELS_LABEL_Y, LABEL_COLOR, false);
     }
 }
