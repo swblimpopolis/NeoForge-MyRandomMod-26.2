@@ -1,6 +1,8 @@
 {
   "values": [
     "myrandommod:electric_furnace",
-    "myrandommod:solar_panel"
+    "myrandommod:solar_panel",
+    "myrandommod:coal_generator",
+    "myrandommod:electrical_bench"
   ]
 }

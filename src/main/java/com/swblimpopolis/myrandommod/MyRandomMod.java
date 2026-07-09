@@ -7,11 +7,20 @@ import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 
+import com.swblimpopolis.myrandommod.block.CoalGeneratorBlock;
+import com.swblimpopolis.myrandommod.block.ElectricalBenchBlock;
 import com.swblimpopolis.myrandommod.block.ElectricFurnaceBlock;
 import com.swblimpopolis.myrandommod.block.SolarPanelBlock;
+import com.swblimpopolis.myrandommod.item.crafting.ElectricalShapedRecipe;
+import com.swblimpopolis.myrandommod.menu.ElectricalBenchMenu;
+import com.swblimpopolis.myrandommod.block.entity.CoalGeneratorBlockEntity;
 import com.swblimpopolis.myrandommod.block.entity.ElectricFurnaceBlockEntity;
 import com.swblimpopolis.myrandommod.block.entity.SolarPanelBlockEntity;
+import com.swblimpopolis.myrandommod.item.ElectricAxeItem;
+import com.swblimpopolis.myrandommod.item.ElectricShovelItem;
 import com.swblimpopolis.myrandommod.item.ElectricSwordItem;
+import com.swblimpopolis.myrandommod.item.ElectricToolItem;
+import com.swblimpopolis.myrandommod.menu.CoalGeneratorMenu;
 import com.swblimpopolis.myrandommod.menu.ElectricFurnaceMenu;
 import com.swblimpopolis.myrandommod.menu.SolarPanelMenu;
 
@@ -26,6 +35,9 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -63,6 +75,22 @@ public class MyRandomMod {
     public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(Registries.MENU, MODID);
     // Create a Deferred Register to hold custom data component types under the "myrandommod" namespace
     public static final DeferredRegister<DataComponentType<?>> DATA_COMPONENTS = DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, MODID);
+    // Registers for the Electrical Bench's own crafting recipe type + serializer
+    public static final DeferredRegister<RecipeType<?>> RECIPE_TYPES = DeferredRegister.create(Registries.RECIPE_TYPE, MODID);
+    public static final DeferredRegister<RecipeSerializer<?>> RECIPE_SERIALIZERS = DeferredRegister.create(Registries.RECIPE_SERIALIZER, MODID);
+
+    // The Electrical Bench's crafting recipe type: recipes of this type are only matched by the bench, so
+    // they can't be crafted in the vanilla table. All the bench's (shaped) recipes share this type.
+    public static final Supplier<RecipeType<CraftingRecipe>> ELECTRICAL_CRAFTING = RECIPE_TYPES.register("electrical_crafting",
+            () -> new RecipeType<CraftingRecipe>() {
+                @Override
+                public String toString() {
+                    return MODID + ":electrical_crafting";
+                }
+            });
+    // The shaped serializer (recipe JSON "type": "myrandommod:electrical_crafting").
+    public static final Supplier<RecipeSerializer<ElectricalShapedRecipe>> ELECTRICAL_SHAPED = RECIPE_SERIALIZERS.register("electrical_crafting",
+            () -> new RecipeSerializer<>(ElectricalShapedRecipe.MAP_CODEC, ElectricalShapedRecipe.STREAM_CODEC));
 
     // The "charge" stored on a battery-powered item (e.g. the electric sword). Persisted to disk and
     // synced to the client so the charge bar and charged/empty model render correctly.
@@ -81,6 +109,13 @@ public class MyRandomMod {
     // than wearing out. Right-click with a charged battery to refill; unusable at zero charge. See ElectricSwordItem.
     public static final DeferredItem<ElectricSwordItem> ELECTRIC_SWORD = ITEMS.registerItem("electric_sword",
             ElectricSwordItem::new, ElectricSwordItem::baseProperties);
+    // Battery-powered diamond-tier tools that share the sword's charge mechanics (see ElectricToolItem).
+    public static final DeferredItem<ElectricToolItem> ELECTRIC_PICKAXE = ITEMS.registerItem("electric_pickaxe",
+            ElectricToolItem::new, ElectricToolItem::pickaxeProperties);
+    public static final DeferredItem<ElectricAxeItem> ELECTRIC_AXE = ITEMS.registerItem("electric_axe",
+            ElectricAxeItem::new, ElectricToolItem::toolBaseProperties);
+    public static final DeferredItem<ElectricShovelItem> ELECTRIC_SHOVEL = ITEMS.registerItem("electric_shovel",
+            ElectricShovelItem::new, ElectricToolItem::toolBaseProperties);
 
     // The electric furnace block. For now it behaves exactly like a vanilla furnace (same smelting,
     // fuel and automation), emitting light when lit just like the real thing.
@@ -111,6 +146,31 @@ public class MyRandomMod {
     public static final Supplier<MenuType<SolarPanelMenu>> SOLAR_PANEL_MENU = MENU_TYPES.register("solar_panel",
             () -> IMenuTypeExtension.create((windowId, inventory, data) -> new SolarPanelMenu(windowId, inventory)));
 
+    // The coal generator: burns coal/charcoal/coal blocks to charge empty batteries into charged ones.
+    // Glows while it has fuel energy loaded (see CoalGeneratorBlockEntity).
+    public static final DeferredBlock<CoalGeneratorBlock> COAL_GENERATOR = BLOCKS.registerBlock("coal_generator",
+            CoalGeneratorBlock::new,
+            p -> p.mapColor(MapColor.STONE).strength(3.5f).requiresCorrectToolForDrops()
+                    .lightLevel(state -> state.getValue(CoalGeneratorBlock.LIT) ? 13 : 0));
+    // The item form of the coal generator block
+    public static final DeferredItem<BlockItem> COAL_GENERATOR_ITEM = ITEMS.registerSimpleBlockItem("coal_generator", COAL_GENERATOR);
+    // The block entity that runs the burn/charge logic for the coal generator
+    public static final Supplier<BlockEntityType<CoalGeneratorBlockEntity>> COAL_GENERATOR_BE = BLOCK_ENTITY_TYPES.register("coal_generator",
+            () -> new BlockEntityType<>(CoalGeneratorBlockEntity::new, Set.of(COAL_GENERATOR.get())));
+    // The menu (container GUI) for the coal generator
+    public static final Supplier<MenuType<CoalGeneratorMenu>> COAL_GENERATOR_MENU = MENU_TYPES.register("coal_generator",
+            () -> IMenuTypeExtension.create((windowId, inventory, data) -> new CoalGeneratorMenu(windowId, inventory)));
+
+    // The electrical bench: a crafting-table-style block that crafts the mod's items exclusively.
+    public static final DeferredBlock<ElectricalBenchBlock> ELECTRICAL_BENCH = BLOCKS.registerBlock("electrical_bench",
+            ElectricalBenchBlock::new,
+            p -> p.mapColor(MapColor.METAL).strength(2.5f).requiresCorrectToolForDrops());
+    // The item form of the electrical bench block
+    public static final DeferredItem<BlockItem> ELECTRICAL_BENCH_ITEM = ITEMS.registerSimpleBlockItem("electrical_bench", ELECTRICAL_BENCH);
+    // The menu (3x3 crafting GUI) for the electrical bench
+    public static final Supplier<MenuType<ElectricalBenchMenu>> ELECTRICAL_BENCH_MENU = MENU_TYPES.register("electrical_bench",
+            () -> IMenuTypeExtension.create((windowId, inventory, data) -> new ElectricalBenchMenu(windowId, inventory)));
+
     // Creates a creative tab with the id "myrandommod:random_mod_tab" using the charged battery as its icon
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> RANDOM_MOD_TAB = CREATIVE_MODE_TABS.register("random_mod_tab", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.myrandommod.random_mod")) // The language key for the title of this CreativeModeTab
@@ -120,8 +180,13 @@ public class MyRandomMod {
                 output.accept(CHARGED_BATTERY.get()); // Add the charged battery to the Random Mod tab
                 output.accept(EMPTY_BATTERY.get()); // Add the empty battery to the Random Mod tab
                 output.accept(ELECTRIC_SWORD.get()); // Add the electric sword to the Random Mod tab
+                output.accept(ELECTRIC_PICKAXE.get()); // Add the electric pickaxe to the Random Mod tab
+                output.accept(ELECTRIC_AXE.get()); // Add the electric axe to the Random Mod tab
+                output.accept(ELECTRIC_SHOVEL.get()); // Add the electric shovel to the Random Mod tab
                 output.accept(ELECTRIC_FURNACE_ITEM.get()); // Add the electric furnace to the Random Mod tab
                 output.accept(SOLAR_PANEL_ITEM.get()); // Add the solar panel to the Random Mod tab
+                output.accept(COAL_GENERATOR_ITEM.get()); // Add the coal generator to the Random Mod tab
+                output.accept(ELECTRICAL_BENCH_ITEM.get()); // Add the electrical bench to the Random Mod tab
             }).build());
 
     // The constructor for the mod class is the first code that is run when your mod is loaded.
@@ -142,6 +207,9 @@ public class MyRandomMod {
         MENU_TYPES.register(modEventBus);
         // Register the Deferred Register to the mod event bus so data component types get registered
         DATA_COMPONENTS.register(modEventBus);
+        // Register the Electrical Bench recipe type + serializer registers
+        RECIPE_TYPES.register(modEventBus);
+        RECIPE_SERIALIZERS.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (MyRandomMod) to respond directly to events.

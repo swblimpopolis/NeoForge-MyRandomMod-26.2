@@ -1,15 +1,18 @@
 {
-  "type": "minecraft:crafting_shaped",
+  "type": "myrandommod:electrical_crafting",
   "category": "misc",
   "key": {
-    "G": "minecraft:iron_nugget",
-    "S": "minecraft:copper_nugget",
+    "N": [
+      "minecraft:iron_nugget",
+      "minecraft:copper_nugget",
+      "minecraft:gold_nugget"
+    ],
     "R": "minecraft:redstone"
   },
   "pattern": [
-    "GSG",
-    "SRS",
-    "GSG"
+    "NNN",
+    "NRN",
+    "NNN"
   ],
   "result": {
     "id": "myrandommod:empty_battery",

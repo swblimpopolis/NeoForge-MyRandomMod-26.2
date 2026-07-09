@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": "minecraft:iron_ingot",
+    "C": "#minecraft:planks",
+    "R": "minecraft:copper_ingot"
+  },
+  "pattern": [
+    "BB ",
+    "CCR",
+    "CCR"
+  ],
+  "result": {
+    "id": "myrandommod:electrical_bench",
+    "count": 1
+  }
+}

@@ -14,12 +14,12 @@
       "trigger": "minecraft:inventory_changed"
     },
     "has_the_recipe": {
-      "conditions": { "recipe": "myrandommod:empty_battery" },
+      "conditions": { "recipe": "myrandommod:empty_battery_from_copper_gold" },
       "trigger": "minecraft:recipe_unlocked"
     }
   },
   "requirements": [
     [ "has_the_recipe", "has_iron_ingot", "has_copper_ingot", "has_gold_ingot" ]
   ],
-  "rewards": { "recipes": [ "myrandommod:empty_battery" ] }
+  "rewards": { "recipes": [ "myrandommod:empty_battery_from_copper_gold" ] }
 }

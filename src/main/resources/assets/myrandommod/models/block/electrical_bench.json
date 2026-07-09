@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "myrandommod:block/electrical_bench_front",
+    "down": "myrandommod:block/electrical_bench_bottom",
+    "up": "myrandommod:block/electrical_bench_top",
+    "north": "myrandommod:block/electrical_bench_front",
+    "east": "myrandommod:block/electrical_bench_side",
+    "south": "myrandommod:block/electrical_bench_side",
+    "west": "myrandommod:block/electrical_bench_front"
+  }
+}

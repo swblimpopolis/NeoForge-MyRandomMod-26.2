@@ -2,18 +2,17 @@
   "type": "myrandommod:electrical_crafting",
   "category": "misc",
   "key": {
-    "G": "minecraft:glass",
-    "S": "myrandommod:empty_battery",
-    "F": "minecraft:iron_ingot",
+    "C": "minecraft:cobblestone",
+    "B": "myrandommod:empty_battery",
     "R": "minecraft:redstone"
   },
   "pattern": [
-    "GGG",
-    "SSS",
-    "FRF"
+    "CCC",
+    "BRB",
+    "CCC"
   ],
   "result": {
-    "id": "myrandommod:solar_panel",
+    "id": "myrandommod:coal_generator",
     "count": 1
   }
 }

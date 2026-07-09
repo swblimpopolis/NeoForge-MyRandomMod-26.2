@@ -8,12 +8,12 @@
     "D": "minecraft:stick"
   },
   "pattern": [
-    "AAB",
-    "CBC",
-    "DAA"
+    "ABB",
+    "ADB",
+    "CDC"
   ],
   "result": {
-    "id": "myrandommod:electric_sword",
+    "id": "myrandommod:electric_axe",
     "count": 1
   }
 }

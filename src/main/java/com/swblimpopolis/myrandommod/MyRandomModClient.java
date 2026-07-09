@@ -1,5 +1,7 @@
 package com.swblimpopolis.myrandommod;
 
+import com.swblimpopolis.myrandommod.client.screen.CoalGeneratorScreen;
+import com.swblimpopolis.myrandommod.client.screen.ElectricalBenchScreen;
 import com.swblimpopolis.myrandommod.client.screen.ElectricFurnaceScreen;
 import com.swblimpopolis.myrandommod.client.screen.SolarPanelScreen;
 
@@ -39,5 +41,7 @@ public class MyRandomModClient {
     static void onRegisterMenuScreens(RegisterMenuScreensEvent event) {
         event.register(MyRandomMod.ELECTRIC_FURNACE_MENU.get(), ElectricFurnaceScreen::new);
         event.register(MyRandomMod.SOLAR_PANEL_MENU.get(), SolarPanelScreen::new);
+        event.register(MyRandomMod.COAL_GENERATOR_MENU.get(), CoalGeneratorScreen::new);
+        event.register(MyRandomMod.ELECTRICAL_BENCH_MENU.get(), ElectricalBenchScreen::new);
     }
 }

@@ -8,12 +8,12 @@
     "D": "minecraft:stick"
   },
   "pattern": [
-    "AAB",
-    "CBC",
-    "DAA"
+    "CCB",
+    "ADA",
+    "DCC"
   ],
   "result": {
-    "id": "myrandommod:electric_sword",
+    "id": "myrandommod:electric_shovel",
     "count": 1
   }
 }
