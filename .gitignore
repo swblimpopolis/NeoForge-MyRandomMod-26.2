@@ -38,3 +38,6 @@ run/
 **/src/generated/**/.cache/
 repo/
 !**/src/**/repo/
+
+### Local notes / knowledge dump (not for the repo) ###
+HINDSIGHT.md

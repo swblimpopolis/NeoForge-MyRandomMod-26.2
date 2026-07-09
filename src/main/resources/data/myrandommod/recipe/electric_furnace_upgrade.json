@@ -1,0 +1,17 @@
+{
+  "type": "myrandommod:electrical_crafting",
+  "category": "misc",
+  "key": {
+    "C": "minecraft:diamond",
+    "B": "myrandommod:charged_battery"
+  },
+  "pattern": [
+    " B ",
+    "BCB",
+    " B "
+  ],
+  "result": {
+    "id": "myrandommod:electric_furnace_upgrade",
+    "count": 1
+  }
+}

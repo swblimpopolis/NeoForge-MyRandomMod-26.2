@@ -104,6 +104,10 @@ public class MyRandomMod {
     public static final DeferredItem<Item> CHARGED_BATTERY = ITEMS.registerSimpleItem("charged_battery");
     // The empty battery: a crafting component for future recipes. Deliberately not a fuel.
     public static final DeferredItem<Item> EMPTY_BATTERY = ITEMS.registerSimpleItem("empty_battery");
+    // The electric furnace upgrade: dropped into the furnace's upgrade slot to speed up smelting. Each
+    // upgrade (up to 5) adds one extra smelting pass per tick, so throughput scales but energy-per-item
+    // stays the same (batteries drain proportionally faster). See ElectricFurnaceBlockEntity.
+    public static final DeferredItem<Item> ELECTRIC_FURNACE_UPGRADE = ITEMS.registerSimpleItem("electric_furnace_upgrade");
 
     // The electric sword: a melee weapon that runs on battery charge (its own CHARGE component) rather
     // than wearing out. Right-click with a charged battery to refill; unusable at zero charge. See ElectricSwordItem.
@@ -179,6 +183,7 @@ public class MyRandomMod {
             .displayItems((parameters, output) -> {
                 output.accept(CHARGED_BATTERY.get()); // Add the charged battery to the Random Mod tab
                 output.accept(EMPTY_BATTERY.get()); // Add the empty battery to the Random Mod tab
+                output.accept(ELECTRIC_FURNACE_UPGRADE.get()); // Add the electric furnace upgrade to the Random Mod tab
                 output.accept(ELECTRIC_SWORD.get()); // Add the electric sword to the Random Mod tab
                 output.accept(ELECTRIC_PICKAXE.get()); // Add the electric pickaxe to the Random Mod tab
                 output.accept(ELECTRIC_AXE.get()); // Add the electric axe to the Random Mod tab

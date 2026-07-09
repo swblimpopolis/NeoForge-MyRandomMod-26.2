@@ -26,7 +26,11 @@ import net.minecraft.world.level.block.state.BlockState;
 public class ElectricFurnaceBlockEntity extends AbstractFurnaceBlockEntity {
     // The 4th slot (beyond vanilla input=0, fuel=1, result=2): spent empty batteries collect here.
     public static final int SLOT_BATTERY_OUTPUT = 3;
-    private static final int CONTAINER_SIZE = 4;
+    // The 5th slot: speed upgrades. Each upgrade in this slot adds one extra smelting pass per tick.
+    public static final int SLOT_UPGRADE = 4;
+    // Cap on how many upgrades take effect (and how many the slot holds): 5 upgrades = 6x speed.
+    public static final int MAX_UPGRADES = 5;
+    private static final int CONTAINER_SIZE = 5;
     // Hoppers below pull the smelt result, the spent batteries, then any fuel remainder.
     private static final int[] SLOTS_FOR_DOWN = {SLOT_RESULT, SLOT_BATTERY_OUTPUT, SLOT_FUEL};
 
@@ -48,8 +52,23 @@ public class ElectricFurnaceBlockEntity extends AbstractFurnaceBlockEntity {
     // because menu interactions never run mid-tick — any decrease here is burn consumption.
     public static void electricServerTick(Level level, BlockPos pos, BlockState state, ElectricFurnaceBlockEntity be) {
         ItemStack fuelBefore = be.getItem(SLOT_FUEL).copy();
-        AbstractFurnaceBlockEntity.serverTick((ServerLevel) level, pos, state, be);
+        // One vanilla tick normally, plus one extra pass per installed upgrade. Each pass advances the
+        // cook timer and burns fuel by one, so more upgrades = faster smelting at the same energy/item.
+        int passes = 1 + be.getUpgradeCount();
+        for (int i = 0; i < passes; i++) {
+            AbstractFurnaceBlockEntity.serverTick((ServerLevel) level, pos, state, be);
+        }
         be.depositSpentBatteries(fuelBefore);
+    }
+
+    // Number of active speed upgrades: the count in the upgrade slot, clamped to MAX_UPGRADES. Anything
+    // other than the upgrade item (or an empty slot) counts as zero.
+    private int getUpgradeCount() {
+        ItemStack upgrades = this.items.get(SLOT_UPGRADE);
+        if (!upgrades.is(MyRandomMod.ELECTRIC_FURNACE_UPGRADE.get())) {
+            return 0;
+        }
+        return Math.min(upgrades.getCount(), MAX_UPGRADES);
     }
 
     // If a charged battery was consumed as fuel this tick, add the same number of empty batteries to
@@ -114,6 +133,9 @@ public class ElectricFurnaceBlockEntity extends AbstractFurnaceBlockEntity {
         }
         if (slot == SLOT_BATTERY_OUTPUT) {
             return false;
+        }
+        if (slot == SLOT_UPGRADE) {
+            return stack.is(MyRandomMod.ELECTRIC_FURNACE_UPGRADE.get());
         }
         return super.canPlaceItem(slot, stack);
     }
